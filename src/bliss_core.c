@@ -1191,12 +1191,30 @@ unsigned long bliss_stats_get_nof_generators(const bliss_stats_t *stats) {
  * UTILITY FUNCTIONS
  * =================================================================== */
 
-void bliss_set_verbose_level(int level) {
-    verbose_level = level;
+int bliss_set_verbose_level(int level) {
+  if (level < 0 || level > 3) {
+    fprintf(stderr, "bliss: Invalid verbose level %d. Must be between 0 and 3.\n", level);
+    return BLISS_ERROR_INVALID_ARGUMENT;
+  }
+  verbose_level = level;
+  return BLISS_OK;
 }
 
-void bliss_set_verbose_file(FILE *fp) {
-    verbose_file = fp;
+int bliss_set_verbose_file(FILE* fp) {
+  if (fp == NULL) {
+    fprintf(stderr, "bliss: Invalid file pointer for verbose output.\n");
+    return BLISS_ERROR_INVALID_ARGUMENT;
+  }
+  verbose_file = fp;
+  return BLISS_OK;
+}
+
+int bliss_get_verbose_level(void) {
+  return verbose_level;
+}
+
+FILE* bliss_get_verbose_file(void) {
+  return verbose_file;
 }
 
 const char *bliss_version_string(void) {

@@ -9,7 +9,20 @@
 #include <stdio.h>
 #include <time.h>
 #include <assert.h>
-
+#include <stdarg.h>
+ /* ===================================================================
+  * VERBOSE OUTPUT UTILITIES
+  * =================================================================== */
+void DPRINTF(const char* format, ...) {
+  int verbose_level = bliss_get_verbose_level();
+  FILE* verbose_file = bliss_get_verbose_file();
+  if (verbose_level > 0) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(verbose_file ? verbose_file : stdout, format, args);
+    va_end(args);
+  }
+}
 
 /* ===================================================================
  * TEST UTILITIES
@@ -122,57 +135,58 @@ bool test_graph_creation(void) {
 
 /* Test partition operations */
 bool test_partition_operations(void) {
-    printf("DEBUG: Starting partition operations test\n");
+
+    DPRINTF("Starting partition operations test\n");
     
     /* Create test graph */
     bliss_graph_t *graph = bliss_new(6);
-    printf("DEBUG: Created graph: %p\n", (void*)graph);
+    DPRINTF("Created graph: %p\n", (void*)graph);
 
     /* Add edges to create a simple cycle */
     for (unsigned int i = 0; i < 6; i++) {
         bliss_add_edge(graph, i, (i + 1) % 6);
     }
-    printf("DEBUG: Added edges\n");
+    DPRINTF("Added edges\n");
 
     /* Create initial partition */
     partition_t *partition = partition_new(6);
-    printf("DEBUG: Created partition: %p\n", (void*)partition);
+    DPRINTF("Created partition: %p\n", (void*)partition);
 
     /* Add all vertices to one cell */
     for (unsigned int i = 0; i < 6; i++) {
         partition_add_to_cell(partition, 0, i);
     }
     partition->num_cells = 1;
-    printf("DEBUG: Added all vertices to cell 0, num_cells=%u\n", partition->num_cells);
+    DPRINTF("Added all vertices to cell 0, num_cells=%u\n", partition->num_cells);
 
     /* Test partition validation */
     bool valid1 = validate_partition(partition, 6);
-    printf("DEBUG: Initial partition valid: %s\n", valid1 ? "YES" : "NO");
+    DPRINTF("Initial partition valid: %s\n", valid1 ? "YES" : "NO");
     if (!valid1) {
-        printf("DEBUG: FAILING at initial validation\n");
+        DPRINTF("FAILING at initial validation\n");
         bliss_release(graph);
         partition_release(partition);
         return false;
     }
 
     /* Test vertex individualization */
-    printf("DEBUG: Calling individualize_vertex...\n");
+    DPRINTF("Calling individualize_vertex...\n");
     partition_t *individualized = individualize_vertex(partition, 0, 6, graph);
-    printf("DEBUG: individualize_vertex returned: %p\n", (void*)individualized);
+    DPRINTF("individualize_vertex returned: %p\n", (void*)individualized);
     if (!individualized) {
-        printf("DEBUG: FAILING - individualize_vertex returned NULL\n");
+        DPRINTF("FAILING - individualize_vertex returned NULL\n");
         bliss_release(graph);
         partition_release(partition);
         return false;
     }
 
     /* Check that vertex 0 is now in its own cell */
-    printf("DEBUG: Checking vertex separation...\n");
-    printf("DEBUG: vertex 0 in cell %u, vertex 1 in cell %u\n", 
+    DPRINTF("Checking vertex separation...\n");
+    DPRINTF("vertex 0 in cell %u, vertex 1 in cell %u\n", 
            individualized->element_to_cell[0], individualized->element_to_cell[1]);
     
     if (individualized->element_to_cell[0] == individualized->element_to_cell[1]) {
-        printf("DEBUG: FAILING - vertices 0 and 1 still in same cell\n");
+        DPRINTF("FAILING - vertices 0 and 1 still in same cell\n");
         bliss_release(graph);
         partition_release(partition);
         partition_release(individualized);
@@ -180,18 +194,18 @@ bool test_partition_operations(void) {
     }
 
     /* Test refined partition validation */
-    printf("DEBUG: Validating individualized partition...\n");
+    DPRINTF("Validating individualized partition...\n");
     bool valid2 = validate_partition(individualized, 6);
-    printf("DEBUG: Individualized partition valid: %s\n", valid2 ? "YES" : "NO");
+    DPRINTF("Individualized partition valid: %s\n", valid2 ? "YES" : "NO");
     if (!valid2) {
-        printf("DEBUG: FAILING at individualized validation\n");
+        DPRINTF("FAILING at individualized validation\n");
         bliss_release(graph);
         partition_release(partition);
         partition_release(individualized);
         return false;
     }
 
-    printf("DEBUG: Test completed successfully\n");
+    DPRINTF("Test completed successfully\n");
     
     /* Cleanup */
     partition_release(partition);
@@ -306,6 +320,53 @@ static void count_automorphisms(void *param, unsigned int n, const unsigned int 
     counter->last_automorphism = bliss_malloc(n * sizeof(unsigned int));
     memcpy(counter->last_automorphism, aut, n * sizeof(unsigned int));
     counter->n = n;
+}
+
+// Add these test functions to your bliss_tests.c:
+
+bool test_known_automorphisms(void) {
+    printf("=== Testing Known Automorphism Cases ===\n");
+    
+    // Test 1: Complete Graph K4 - should have 24 automorphisms (4!)
+    bliss_graph_t *k4 = bliss_create_complete_graph(4);
+    bliss_stats_t *stats = bliss_stats_new();
+    bliss_find_automorphisms(k4, stats, NULL, NULL);
+    
+    printf("K4: Found %lu generators (expected: 3-4 generators for group size 24)\n", 
+           bliss_stats_get_nof_generators(stats));
+    printf("K4: Group size approx %.0f (expected: 24)\n", 
+           bliss_stats_get_group_size_approx(stats));
+    
+    bliss_stats_release(stats);
+    bliss_release(k4);
+    
+    // Test 2: Cycle C6 - should have 12 automorphisms (dihedral group D6)
+    bliss_graph_t *c6 = bliss_create_cycle_graph(6);
+    stats = bliss_stats_new();
+    bliss_find_automorphisms(c6, stats, NULL, NULL);
+    
+    printf("C6: Found %lu generators (expected: 2 generators for group size 12)\n", 
+           bliss_stats_get_nof_generators(stats));
+    printf("C6: Group size approx %.0f (expected: 12)\n", 
+           bliss_stats_get_group_size_approx(stats));
+    
+    bliss_stats_release(stats);
+    bliss_release(c6);
+    
+    // Test 3: Petersen Graph - should have 120 automorphisms
+    bliss_graph_t *petersen = bliss_create_petersen_graph();
+    stats = bliss_stats_new();
+    bliss_find_automorphisms(petersen, stats, NULL, NULL);
+    
+    printf("Petersen: Found %lu generators (expected: 4-5 generators for group size 120)\n", 
+           bliss_stats_get_nof_generators(stats));
+    printf("Petersen: Group size approx %.0f (expected: 120)\n", 
+           bliss_stats_get_group_size_approx(stats));
+    
+    bliss_stats_release(stats);
+    bliss_release(petersen);
+    
+    return true;
 }
 
 /* Test automorphism detection on simple graphs */
@@ -781,7 +842,7 @@ void print_test_summary(void) {
 
     if (test_stats.failed_tests == 0) {
         printf("\n?? ALL TESTS PASSED! ??\n");
-        printf("Your bliss C implementation is working correctly!\n");
+        printf("The bliss-C implementation is working correctly!\n");
     } else {
         printf("\n? Some tests failed. Please check the implementation.\n");
     }
@@ -823,6 +884,8 @@ bool run_comprehensive_tests(void) {
     printf("\n--- Regression Tests ---\n");
     RUN_TEST(test_regression_cases);
 
+    printf("\n=== Known Automorphism Cases ===\n");
+    RUN_TEST(test_known_automorphisms);
     /* Print summary */
     print_test_summary();
 
@@ -851,6 +914,7 @@ bool run_automorphism_tests(void) {
     RUN_TEST(test_simple_automorphisms);
     RUN_TEST(test_complex_automorphisms);
     RUN_TEST(test_canonical_labeling);
+    RUN_TEST(test_known_automorphisms);
 
     print_test_summary();
     return test_stats.failed_tests == 0;

@@ -360,9 +360,6 @@ unsigned long bliss_stats_get_nof_nodes(const bliss_stats_t *stats);
 unsigned long bliss_stats_get_nof_leaf_nodes(const bliss_stats_t *stats);
 unsigned long bliss_stats_get_nof_generators(const bliss_stats_t *stats);
 
-/* Utility functions */
-void bliss_set_verbose_level(int level);
-void bliss_set_verbose_file(FILE *fp);
 
 bliss_error_t bliss_validate_and_repair(bliss_graph_t *graph);
 void search_automorphisms_with_individualization(bliss_graph_t* graph,
@@ -401,5 +398,9 @@ search_node_t* create_child_node_unified(const search_node_t* parent,
 #define BLISS_VERSION_PATCH 0
 
 const char *bliss_version_string(void);
+int bliss_set_verbose_level(int level);
+int bliss_set_verbose_file(FILE* fp);
+FILE* bliss_get_verbose_file(void);
+int bliss_get_verbose_level(void);
 
 #endif /* BLISS_H */
