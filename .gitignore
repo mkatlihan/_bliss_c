@@ -1,0 +1,6 @@
+# Ignore bak files 
+*.bak
+*~
+# Ignore log files 
+*.log
+!README.md
