@@ -1,0 +1,25 @@
+@PACKAGE_INIT@
+
+# bliss CMake configuration file
+
+set(BLISS_VERSION @PROJECT_VERSION@)
+
+# Check if components are requested
+set(_bliss_supported_components bliss)
+
+foreach(_comp ${bliss_FIND_COMPONENTS})
+    if (NOT _comp IN_LIST _bliss_supported_components)
+        set(bliss_FOUND False)
+        set(bliss_NOT_FOUND_MESSAGE "Unsupported component: ${_comp}")
+    endif()
+endforeach()
+
+# Include targets
+include("${CMAKE_CURRENT_LIST_DIR}/blissTargets.cmake")
+
+# Set variables for compatibility
+get_target_property(BLISS_INCLUDE_DIRS bliss::bliss INTERFACE_INCLUDE_DIRECTORIES)
+set(BLISS_LIBRARIES bliss::bliss)
+
+# Check that the targets exist
+check_required_components(bliss)

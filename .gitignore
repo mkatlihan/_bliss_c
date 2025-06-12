@@ -4,3 +4,10 @@
 # Ignore log files 
 *.log
 !README.md
+
+_bak/
+_build/
+_release/
+build/
+
+*.npp
