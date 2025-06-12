@@ -294,12 +294,12 @@ bliss -v input.dimacs
 make test
 
 # Run specific test categories
-./test_bliss_comprehensive basic
-./test_bliss_comprehensive auto
-./test_bliss_comprehensive perf
+./test_bliss_complete basic
+./test_bliss_complete auto
+./test_bliss_complete perf
 
 # Interactive testing mode
-./test_bliss_comprehensive interactive
+./test_bliss_complete interactive
 ```
 
 ### Test Categories
@@ -404,7 +404,7 @@ cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
 
 # Run with memory checking
-./test_bliss_comprehensive
+./test_bliss_complete
 ```
 
 ## Contributing

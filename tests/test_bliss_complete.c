@@ -498,7 +498,7 @@ bool test_performance(void) {
     double densities[] = {0.2, 0.5, 0.8};
     double time_limit;
     time_limit = 5.0; /* seconds */
-    printf("Running performance tests on random graphs...\n");
+    printf("\nRunning performance tests on random graphs...\n");
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             unsigned int n = sizes[i];
