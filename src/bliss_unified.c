@@ -26,7 +26,7 @@ static int compare_labelings(const unsigned int *lab1, const unsigned int *lab2,
 }
 
 /* Update canonical labeling if current is better */
-static bool update_canonical_labeling(search_state_t *state,
+bool update_canonical_labeling(search_state_t *state,
                                       const partition_t *current_partition,
                                       unsigned int n) {
     unsigned int *current_labeling = bliss_malloc(n * sizeof(unsigned int));
@@ -54,7 +54,7 @@ static bool update_canonical_labeling(search_state_t *state,
 }
 
 /* Check if current partition is compatible with canonical path */
-static bool is_canonical_path(const search_state_t *state,
+bool is_canonical_path(const search_state_t *state,
                              const partition_t *current_partition,
                              unsigned int level) {
     if (!state->best_path || level >= state->path_length) {

@@ -5,7 +5,7 @@
  * group properties, allowing comparison with the original bliss results.
  */
 
-#include "../bliss.h"
+#include "bliss.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

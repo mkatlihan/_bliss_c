@@ -1,4 +1,4 @@
-#include "../bliss.h"
+#include "bliss.h"
 #include <stdio.h>
 
 int main(void) {

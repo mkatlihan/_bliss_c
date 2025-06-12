@@ -5,7 +5,7 @@
  * without relying on complex automorphism computations that may be incomplete.
  */
 
-#include "../bliss.h"
+#include "bliss.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

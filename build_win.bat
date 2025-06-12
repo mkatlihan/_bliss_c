@@ -8,8 +8,8 @@ cd build
 
 REM Simple build without CMake (for testing)
 echo Building library...
-gcc -c -O3 -Wall -Wextra -std=c11 ../bliss_core.c -o bliss_core.o
-gcc -c -O3 -Wall -Wextra -std=c11 ../bliss_io.c -o bliss_io.o
+gcc -c -O3 -Wall -Wextra -std=c11 ../src/bliss_core.c -I../include -o bliss_core.o
+gcc -c -O3 -Wall -Wextra -std=c11 ../src/bliss_io.c -I../include -o bliss_io.o
 
 echo Creating static library...
 ar rcs libbliss.a bliss_core.o bliss_io.o

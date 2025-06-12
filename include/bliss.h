@@ -306,7 +306,12 @@ const unsigned int *bliss_find_canonical_labeling(bliss_graph_t *graph,
                                                    bliss_stats_t *stats,
                                                    bliss_automorphism_hook_t hook,
                                                    void *hook_user_param);
-
+bool update_canonical_labeling(search_state_t *state,
+                                      const partition_t *current_partition,
+                                      unsigned int n);
+bool is_canonical_path(const search_state_t *state,
+                              const partition_t *current_partition,
+                              unsigned int level);
 /* Graph transformation */
 bliss_graph_t *bliss_permute(const bliss_graph_t *graph, const unsigned int *perm);
 bool bliss_is_automorphism(const bliss_graph_t *graph, const unsigned int *perm);

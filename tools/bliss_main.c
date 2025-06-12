@@ -5,7 +5,7 @@
  * for computing automorphisms and canonical forms of graphs.
  */
 
-#include "../bliss.h"
+#include "bliss.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

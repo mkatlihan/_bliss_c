@@ -67,7 +67,7 @@ set(BLISS_SOURCES
 )
 
 set(BLISS_HEADERS
-    bliss.h
+    include/bliss.h
 )
 
 # Create the library
@@ -87,7 +87,7 @@ endif()
 
 # Include directories
 target_include_directories(bliss PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
 
