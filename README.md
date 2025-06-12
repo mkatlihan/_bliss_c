@@ -341,7 +341,7 @@ The test suite includes standard benchmark graphs:
 
 ### Memory Usage
 
-Memory usage scales approximately as O(n�) for dense graphs and O(n + m) for sparse graphs, where n is vertices and m is edges.
+Memory usage scales approximately as O(n^2) for dense graphs and O(n + m) for sparse graphs, where n is vertices and m is edges.
 
 ## Implementation Details
 
