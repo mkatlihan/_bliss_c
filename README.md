@@ -454,7 +454,7 @@ Algorithm Engineering and Experiments (ALENEX07), pages 135-149, 2007.
 
 ## Changelog
 
-### Version 0.77.0
+### Version 0.77c.0
 - Initial C translation from C++ bliss
 - Complete API compatibility
 - Comprehensive test suite
