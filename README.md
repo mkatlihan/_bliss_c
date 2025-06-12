@@ -341,7 +341,7 @@ The test suite includes standard benchmark graphs:
 
 ### Memory Usage
 
-Memory usage scales approximately as O(n²) for dense graphs and O(n + m) for sparse graphs, where n is vertices and m is edges.
+Memory usage scales approximately as O(nï¿½) for dense graphs and O(n + m) for sparse graphs, where n is vertices and m is edges.
 
 ## Implementation Details
 
@@ -483,4 +483,4 @@ Algorithm Engineering and Experiments (ALENEX07), pages 135-149, 2007.
 
 - Original bliss authors: Tommi Junttila and Petteri Kaski
 - Graph automorphism community for algorithm development
-- Contributors to the C translation effort: amexcompliance, taboxdev
+- Contributors to the C translation effort: `amexcompliance`, `taboxdev`
