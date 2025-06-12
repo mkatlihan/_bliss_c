@@ -483,4 +483,4 @@ Algorithm Engineering and Experiments (ALENEX07), pages 135-149, 2007.
 
 - Original bliss authors: Tommi Junttila and Petteri Kaski
 - Graph automorphism community for algorithm development
-- Contributors to the C translation effort
+- Contributors to the C translation effort: amexcompliance, taboxdev
