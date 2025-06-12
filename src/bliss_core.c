@@ -494,9 +494,15 @@ static void search_automorphisms_recursive(bliss_graph_t *graph,
         child->splitting_vertex = split_vertex;
         child->target_cell = best_cell;
         child->level = state->current->level + 1;
-        
+        #if BLISS_DEBUG&2
+        debug_partition_state(&parent->partition, "BEFORE child creation");  
+        #endif
+        /* Initialize child partition */
         /* Copy partition and make split_vertex first in its cell */
         child->partition = *partition_new(graph->num_vertices);
+        #if BLISS_DEBUG&2
+        debug_partition_state(&child->partition, "AFTER child creation");
+        #endif
         /* TODO: Implement partition copying and vertex movement */
         
         /* Link child to parent */

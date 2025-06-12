@@ -9,6 +9,12 @@
 #include <time.h>
 #include <math.h>
 
+#define BLISS_DEBUG 0
+
+#if BLISS_DEBUG&2
+// Forward declarations for functions
+static void debug_partition_state(const partition_t *partition, const char *context);
+#endif
 
 /* ===================================================================
  * CANONICAL FORM COMPUTATION (from bliss_core_fixes.c)
@@ -113,6 +119,20 @@ search_node_t *create_child_node_unified(const search_node_t *parent,
     return child;
 }
 
+// Add this to bliss_partition.c:
+void partition_free_contents(partition_t* partition) {
+  if (!partition) return;
+
+  for (unsigned int i = 0; i < partition->capacity; i++) {
+    bliss_free(partition->cells[i].elements);
+  }
+
+  bliss_free(partition->cells);
+  bliss_free(partition->element_to_cell);
+  bliss_free(partition->position_in_cell);
+  // DON'T free the partition struct itself
+}
+
 /* ===================================================================
  * UNIFIED SEARCH ALGORITHM - BEST OF BOTH WORLDS
  * =================================================================== */
@@ -128,6 +148,21 @@ static void search_automorphisms_unified(bliss_graph_t *graph,
                                         search_state_t *state,
                                         bliss_automorphism_hook_t hook,
                                         void *hook_param) {
+#if BLISS_DEBUG&4
+    /* GUARD: Prevent infinite recursion */
+    static unsigned int total_calls = 0;
+    total_calls++;
+
+    if (total_calls > 1000) {  // Reasonable limit
+      printf("ERROR: Stopping after %u calls - likely infinite loop\n", total_calls);
+      exit(1);
+    }
+
+    if (state->current->level > 50) {  // Deeper than any reasonable graph
+      printf("ERROR: Recursion too deep at level %u\n", state->current->level);
+      return;
+    }
+#endif
     /* Check termination condition */
     if (state->terminate_func && state->terminate_func(state->terminate_param)) {
         return;
@@ -140,7 +175,16 @@ static void search_automorphisms_unified(bliss_graph_t *graph,
     (void)refined; /* Avoid unused variable warning */
     
     /* STEP 2: Check if we've reached a discrete partition (all cells are units) */
+#if BLISS_DEBUG&1
+    printf("DEBUG Level %u: discrete_cells=%u, total_vertices=%u\n",
+      state->current->level,
+      state->current->partition.num_discrete_cells,
+      graph->num_vertices);
+#endif
     if (state->current->partition.num_discrete_cells == graph->num_vertices) {
+#if BLISS_DEBUG&1
+        printf("TERMINATING: Discrete partition reached at level %u\n", state->current->level);
+#endif
         state->stats->nof_leaf_nodes++;
         
         /* Update canonical labeling if this is the best so far */
@@ -197,7 +241,12 @@ static void search_automorphisms_unified(bliss_graph_t *graph,
     /* STEP 4: Select target cell for branching using heuristic */
     unsigned int target_cell = select_target_cell(graph, &state->current->partition, 
                                                  graph->splitting_heuristic);
-    
+#if BLISS_DEBUG&1
+    printf("DEBUG Level %u: target_cell=%u, cell_size=%u\n",
+      state->current->level,
+      target_cell,
+      target_cell != UINT_MAX ? state->current->partition.cells[target_cell].size : 0);
+#endif
     if (target_cell == UINT_MAX) {
         /* All cells are units - should not happen here */
         return;
@@ -208,7 +257,11 @@ static void search_automorphisms_unified(bliss_graph_t *graph,
     
     for (unsigned int i = 0; i < split_cell->size; i++) {
         unsigned int split_vertex = split_cell->elements[i];
-        
+      
+#if BLISS_DEBUG&1
+        printf("DEBUG Level %u: Branching on vertex %u (iteration %u/%u)\n",
+          state->current->level, split_vertex, i + 1, split_cell->size);
+#endif
         /* ORBIT PRUNING: Skip vertices in the same orbit as already processed ones */
         bool skip_vertex = false;
         for (unsigned int j = 0; j < i; j++) {
@@ -243,7 +296,7 @@ static void search_automorphisms_unified(bliss_graph_t *graph,
         state->current = prev_current;
         
         /* STEP 8: Clean up child node */
-        partition_release(&child->partition);
+        partition_free_contents(&child->partition);
         bliss_free(child);
     }
 }
@@ -287,7 +340,15 @@ void bliss_find_automorphisms_unified(bliss_graph_t *graph,
     state->root->child = NULL;
     state->root->sibling = NULL;
     state->root->level = 0;
-    state->root->partition = *partition_new(graph->num_vertices);
+    partition_t* initial_partition = partition_new(graph->num_vertices);
+    if (!initial_partition) {
+      bliss_free(state->generators);
+      bliss_free(state->root);
+      bliss_free(state);
+      return;
+    }
+    state->root->partition = *initial_partition;
+    bliss_free(initial_partition); /* Free the wrapper */
     
     /* Build initial color-based partition */
     unsigned int max_color = 0;
@@ -341,7 +402,7 @@ void bliss_find_automorphisms_unified(bliss_graph_t *graph,
     bliss_free(state->generators);
     bliss_free(state->best_path);
     
-    partition_release(&state->root->partition);
+    partition_free_contents(&state->root->partition);
     bliss_free(state->root);
     bliss_free(state);
 }
@@ -393,3 +454,24 @@ const unsigned int *bliss_find_canonical_labeling(bliss_graph_t *graph,
     graph->canonical_labeling_valid = true;
     return graph->canonical_labeling;
 }
+
+/* ===================================================================
+ * DEBUGGING HELPER
+ * =================================================================== */
+#if BLISS_DEBUG&2
+// Add this to help debug memory issues:
+static void debug_partition_state(const partition_t *partition, const char *context) {
+    if (!partition) {
+        printf("DEBUG %s: NULL partition\n", context);
+        return;
+    }
+
+    printf("DEBUG %s: partition at %p\n", context, (void*)partition);
+    printf("  cells=%p, element_to_cell=%p, position_in_cell=%p\n",
+           (void*)partition->cells,
+           (void*)partition->element_to_cell,
+           (void*)partition->position_in_cell);
+    printf("  num_cells=%u, capacity=%u, discrete=%u\n",
+           partition->num_cells, partition->capacity, partition->num_discrete_cells);
+}
+#endif
