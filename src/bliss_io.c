@@ -9,6 +9,27 @@
 #include <ctype.h>
 #include <time.h>
 
+ /* ===================================================================
+  * VERBOSE OUTPUT UTILITIES
+  * =================================================================== */
+void DPRINTF(const char* format, ...) {
+  int verbose_level = bliss_get_verbose_level();
+  FILE* verbose_file = bliss_get_verbose_file();
+  if (verbose_level > 0) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(verbose_file ? verbose_file : stdout, format, args);
+    va_end(args);
+  }
+}
+void DPRINTF_IF(int level, const char* format, ...) {
+  if (bliss_get_verbose_level() >= level) {
+    va_list args;
+    va_start(args, format);
+    vfprintf(bliss_get_verbose_file() ? bliss_get_verbose_file() : stdout, format, args);
+    va_end(args);
+  }
+}
 
 /* ===================================================================
  * ADVANCED I/O FUNCTIONS AND FORMAT EXTENSIONS

@@ -17,6 +17,7 @@
 #include <string.h>
 #include <assert.h>
 #include <limits.h>
+#include <stdarg.h>
 
 /* ===================================================================
  * CONSTANTS AND MACROS
@@ -402,5 +403,7 @@ int bliss_set_verbose_level(int level);
 int bliss_set_verbose_file(FILE* fp);
 FILE* bliss_get_verbose_file(void);
 int bliss_get_verbose_level(void);
+void DPRINTF(const char* format, ...);
+void DPRINTF_IF(int level, const char* format, ...);
 
 #endif /* BLISS_H */

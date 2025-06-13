@@ -198,6 +198,14 @@ if(BUILD_TESTS)
     endif()
     add_test(NAME ValidationTests COMMAND test_validation)
     
+     # LP foolding tests
+    add_executable(test_lpfold tests/test_lpfold.c)
+    target_link_libraries(test_lpfold bliss)
+    if(WIN32)
+        target_link_libraries(test_lpfold -static-libgcc -static-libstdc++)
+    endif()
+    add_test(NAME LPFoldingTests COMMAND test_lpfold)
+
     # Classic graph tests (from original bliss distribution)
     add_executable(test_classic_graphs tests/test_classic_graphs.c)
     target_link_libraries(test_classic_graphs bliss)

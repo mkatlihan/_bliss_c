@@ -295,6 +295,57 @@ static int test_vertex_coloring(void) {
     TEST_SUCCESS();
 }
 
+/* Test canonical labeling consistency */
+static int test_canonical_labeling(void) {
+    printf("Testing canonical labeling...\n");
+    
+    /* Create two isomorphic graphs with different vertex numbering */
+    bliss_graph_t *g1 = bliss_new(4);
+    bliss_graph_t *g2 = bliss_new(4);
+    
+    /* Graph 1: cycle 0-1-2-3-0 */
+    bliss_add_edge(g1, 0, 1);
+    bliss_add_edge(g1, 1, 2);
+    bliss_add_edge(g1, 2, 3);
+    bliss_add_edge(g1, 3, 0);
+    
+    /* Graph 2: cycle 1-2-3-0-1 (same cycle, different starting point) */
+    bliss_add_edge(g2, 1, 2);
+    bliss_add_edge(g2, 2, 3);
+    bliss_add_edge(g2, 3, 0);
+    bliss_add_edge(g2, 0, 1);
+    
+    /* Get canonical labelings */
+    bliss_stats_t *stats1 = bliss_stats_new();
+    bliss_stats_t *stats2 = bliss_stats_new();
+    
+    const unsigned int *canon1 = bliss_find_canonical_labeling(g1, stats1, NULL, NULL);
+    const unsigned int *canon2 = bliss_find_canonical_labeling(g2, stats2, NULL, NULL);
+    
+    TEST_ASSERT(canon1 != NULL, "Canonical labeling 1 should not be NULL");
+    TEST_ASSERT(canon2 != NULL, "Canonical labeling 2 should not be NULL");
+    
+    /* Apply canonical labelings and compare resulting graphs */
+    bliss_graph_t *canonical_g1 = bliss_permute(g1, canon1);
+    bliss_graph_t *canonical_g2 = bliss_permute(g2, canon2);
+    
+    TEST_ASSERT(canonical_g1 != NULL, "Canonical graph 1 should not be NULL");
+    TEST_ASSERT(canonical_g2 != NULL, "Canonical graph 2 should not be NULL");
+    
+    /* Canonical forms should be identical */
+    int cmp_result = bliss_cmp(canonical_g1, canonical_g2);
+    TEST_ASSERT(cmp_result == 0, "Canonical forms of isomorphic graphs should be identical");
+    
+    bliss_stats_release(stats1);
+    bliss_stats_release(stats2);
+    bliss_release(g1);
+    bliss_release(g2);
+    bliss_release(canonical_g1);
+    bliss_release(canonical_g2);
+    
+    TEST_SUCCESS();
+}
+
 /* Test graph connectivity */
 static int test_graph_connectivity(void) {
     printf("Testing graph connectivity...\n");
@@ -377,6 +428,7 @@ static int test_random_graphs(void) {
     TEST_SUCCESS();
 }
 
+
 /* Main test runner */
 int main(void) {
     printf("Running classic graph structure tests...\n\n");
@@ -395,6 +447,9 @@ int main(void) {
     total++; passed += test_graph_connectivity();
     total++; passed += test_hash_consistency();
     total++; passed += test_random_graphs();
+
+    total++; passed += test_canonical_labeling();
+
     
     /* Print summary */
     printf("\nTest Results: %d/%d passed\n", passed, total);
