@@ -346,25 +346,15 @@ partition_t *individualize_vertex(const partition_t *original_partition,
 bool vertices_in_same_orbit(unsigned int v1, unsigned int v2,
                            const search_state_t *state,
                            const bliss_graph_t *graph) {
-    /* Suppress unused parameter warning */
-    (void)state; /* ADD THIS LINE */
-    
-    /* Basic orbit check - in a complete implementation, this would use
-     * the accumulated automorphism generators to compute orbits */
-    
-    /* If vertices have different colors, they cannot be in the same orbit */
-    if (graph->vertex_colors[v1] != graph->vertex_colors[v2]) {
+    if (!state || !state->orbit)
         return false;
-    }
-    
-    /* If vertices have different degrees, they cannot be in the same orbit */
-    if (graph->adj_list_sizes[v1] != graph->adj_list_sizes[v2]) {
+
+    if (graph->vertex_colors[v1] != graph->vertex_colors[v2])
         return false;
-    }
-    
-    /* TODO: More sophisticated orbit computation using generators */
-    /* For now, conservatively assume different orbits */
-    return false;
+
+    unsigned int r1 = orbit_find(state, v1);
+    unsigned int r2 = orbit_find(state, v2);
+    return r1 == r2;
 }
 
 

@@ -63,7 +63,8 @@ set(BLISS_SOURCES
     src/bliss_io.c
     src/bliss_partition.c      # NEW
     src/bliss_refinement.c     # NEW
-	src/bliss_unified.c
+    src/bliss_unified.c
+    src/orbit.c
 )
 
 set(BLISS_HEADERS
