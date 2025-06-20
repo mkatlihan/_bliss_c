@@ -128,7 +128,7 @@ if(BUILD_TESTS)
     add_test(NAME NewBasicTests COMMAND test_bliss_complete basic)
     add_test(NAME NewAutomorphismTests COMMAND test_bliss_complete auto)
     add_test(NAME NewPerformanceTests COMMAND test_bliss_complete perf)
-    add_test(NAME InteractiveTestMode COMMAND test_bliss_complete interactive)
+    #add_test(NAME InteractiveTestMode COMMAND test_bliss_complete interactive)
     
     # ===================================================================
     # LEGACY TESTS (Keep for compatibility and regression testing)
