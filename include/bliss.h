@@ -201,6 +201,10 @@ void* bliss_realloc(void* ptr, size_t size);
 void bliss_free(void* ptr);
 unsigned int min_uint(unsigned int a, unsigned int b);
 unsigned int max_uint(unsigned int a, unsigned int b);
+void orbit_init(search_state_t *state, unsigned int n);
+unsigned int orbit_find(const search_state_t *state, unsigned int v);
+void orbit_union(search_state_t *state, unsigned int a, unsigned int b);
+void orbit_free(search_state_t *state);
 
 /* Partition operations */
 partition_t *partition_new(unsigned int num_vertices);

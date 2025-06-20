@@ -335,6 +335,9 @@ static void search_automorphisms_unified(bliss_graph_t *graph,
                 }
 
                 state->generators[state->num_generators] = automorphism;
+                for (unsigned int i = 0; i < graph->num_vertices; i++) {
+                  orbit_union(state, i, automorphism[i]);
+                }
                 state->num_generators++;
                 state->stats->nof_generators++;
 #if BLISS_DEBUG&2
@@ -458,6 +461,7 @@ void bliss_find_automorphisms_unified(bliss_graph_t *graph,
     state->generator_capacity = 16;
     state->generators = bliss_malloc(state->generator_capacity * sizeof(unsigned int*));
     state->num_generators = 0;
+    orbit_init(state, graph->num_vertices);
     
     /* Create initial partition based on vertex colors */
     state->root = bliss_malloc(sizeof(search_node_t));
@@ -614,6 +618,7 @@ void bliss_find_automorphisms_unified(bliss_graph_t *graph,
         bliss_free(state->generators[i]);
     }
     bliss_free(state->generators);
+    orbit_free(state);
     bliss_free(state->best_path);
     
     partition_free_contents(&state->root->partition);
