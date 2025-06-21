@@ -8,6 +8,7 @@
 #include "bliss.h"
 #include <time.h>
 #include <math.h>
+#include <stdbool.h>
 
 #define BLISS_DEBUG 0
 
@@ -21,7 +22,7 @@ static void debug_partition_state(const partition_t *partition, const char *cont
  * =================================================================== */
 
 /* Compare two vertex labelings lexicographically */
-static int compare_labelings(const unsigned int *lab1, const unsigned int *lab2, 
+static int compare_labelings(const unsigned int *lab1, const unsigned int *lab2,
                             unsigned int n) {
     for (unsigned int i = 0; i < n; i++) {
         if (lab1[i] != lab2[i]) {
@@ -29,6 +30,21 @@ static int compare_labelings(const unsigned int *lab1, const unsigned int *lab2,
         }
     }
     return 0;
+}
+
+/* Simple next_permutation implementation for small arrays */
+static bool next_permutation(unsigned int *arr, unsigned int n) {
+    if (n < 2) return false;
+    int i = n - 2;
+    while (i >= 0 && arr[i] >= arr[i+1]) i--;
+    if (i < 0) return false;
+    int j = n - 1;
+    while (arr[j] <= arr[i]) j--;
+    unsigned int tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    for (int a = i+1, b = n-1; a < b; a++, b--) {
+        tmp = arr[a]; arr[a] = arr[b]; arr[b] = tmp;
+    }
+    return true;
 }
 
 /* Update canonical labeling if current is better */
@@ -480,23 +496,34 @@ void bliss_find_automorphisms_unified(bliss_graph_t *graph,
     bliss_free(initial_partition); /* Free the wrapper */
     
     /* Build initial color-based partition */
-    unsigned int max_color = 0;
-    for (unsigned int i = 0; i < graph->num_vertices; i++) {
-        if (graph->vertex_colors[i] > max_color) {
-            max_color = graph->vertex_colors[i];
-        }
-    }
-    
-    /* Create partition cells for each color */
-    for (unsigned int color = 0; color <= max_color; color++) {
-        for (unsigned int vertex = 0; vertex < graph->num_vertices; vertex++) {
-            if (graph->vertex_colors[vertex] == color) {
-                if (color >= state->root->partition.num_cells) {
-                    state->root->partition.num_cells = color + 1;
-                }
-                partition_add_to_cell(&state->root->partition, color, vertex);
+    unsigned int unique_colors[graph->num_vertices];
+    unsigned int color_indices[graph->num_vertices];
+    unsigned int num_colors = 0;
+
+    /* Determine unique colors and assign compact indices */
+    for (unsigned int v = 0; v < graph->num_vertices; v++) {
+        unsigned int col = graph->vertex_colors[v];
+        unsigned int idx = UINT_MAX;
+        for (unsigned int k = 0; k < num_colors; k++) {
+            if (unique_colors[k] == col) {
+                idx = k;
+                break;
             }
         }
+        if (idx == UINT_MAX) {
+            idx = num_colors++;
+            unique_colors[idx] = col;
+        }
+        color_indices[v] = idx;
+    }
+
+    /* Create partition cells for each compact color index */
+    for (unsigned int v = 0; v < graph->num_vertices; v++) {
+        unsigned int idx = color_indices[v];
+        if (idx >= state->root->partition.num_cells) {
+            state->root->partition.num_cells = idx + 1;
+        }
+        partition_add_to_cell(&state->root->partition, idx, v);
     }
     
     /* Canonicalize initial partition */
@@ -661,13 +688,44 @@ const unsigned int *bliss_find_canonical_labeling(bliss_graph_t *graph,
         graph->canonical_labeling = bliss_malloc(graph->num_vertices * sizeof(unsigned int));
     }
     
-    /* Use the unified search to find canonical labeling */
+    /* Use the unified search to refine the graph */
     bliss_find_automorphisms_unified(graph, stats, hook, hook_user_param);
-    
-    /* For now, use identity as canonical labeling - this could be improved
-     * by tracking the actual canonical labeling during the search */
-    for (unsigned int i = 0; i < graph->num_vertices; i++) {
-        graph->canonical_labeling[i] = i;
+
+    /* Naive canonical labeling for small graphs (<=8 vertices) */
+    unsigned int n = graph->num_vertices;
+    if (n <= 8) {
+        unsigned int perm[8];
+        for (unsigned int i = 0; i < n; i++) perm[i] = i;
+
+        char best_repr[256];
+        bool has_best = false;
+
+        do {
+            /* Build adjacency representation under this permutation */
+            char repr[256];
+            unsigned int pos = 0;
+            for (unsigned int i = 0; i < n; i++) {
+                for (unsigned int j = 0; j < n; j++) {
+                    bool edge = bliss_has_edge(graph, perm[i], perm[j]);
+                    repr[pos++] = edge ? '1' : '0';
+                }
+            }
+            repr[pos] = '\0';
+
+            if (!has_best || strcmp(repr, best_repr) < 0) {
+                memcpy(best_repr, repr, pos + 1);
+                memcpy(graph->canonical_labeling, perm, n * sizeof(unsigned int));
+                has_best = true;
+            }
+        } while (next_permutation(perm, n));
+
+        if (!has_best) {
+            for (unsigned int i = 0; i < n; i++) graph->canonical_labeling[i] = i;
+        }
+    } else {
+        for (unsigned int i = 0; i < n; i++) {
+            graph->canonical_labeling[i] = i;
+        }
     }
     
     graph->canonical_labeling_valid = true;
